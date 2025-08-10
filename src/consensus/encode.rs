@@ -31,7 +31,6 @@ use std::ops::Deref;
 use std::{fmt, io, mem, u32};
 
 use sealed::sealed;
-use thiserror::Error;
 
 use super::endian;
 use crate::blockdata::transaction;
@@ -44,26 +43,65 @@ use serde_crate::{Deserialize, Serialize};
 pub const MAX_VEC_MEM_ALLOC_SIZE: usize = 32 * 1024 * 1024; // 32 MiB
 
 /// Errors encountered when encoding or decoding data.
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub enum Error {
     /// And I/O error.
-    #[error("IO error: {0}")]
-    Io(#[from] io::Error),
+    Io(io::Error),
     /// Key error.
-    #[error("Key error: {0}")]
-    Key(#[from] key::Error),
+    Key(key::Error),
     /// Transaction error.
-    #[error("Transaction error: {0}")]
-    Transaction(#[from] transaction::Error),
+    Transaction(transaction::Error),
     /// RingCt error.
-    #[error("RingCt error: {0}")]
-    RingCt(#[from] ringct::Error),
+    RingCt(ringct::Error),
     /// Address error.
-    #[error("Address error: {0}")]
-    Address(#[from] address::Error),
+    Address(address::Error),
     /// A generic parsing error.
-    #[error("Parsing error: {0}")]
     ParseFailed(&'static str),
+}
+
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::Io(e) => write!(f, "IO error: {}", e),
+            Error::Key(e) => write!(f, "Key error: {}", e),
+            Error::Transaction(e) => write!(f, "Transaction error: {}", e),
+            Error::RingCt(e) => write!(f, "RingCt error: {}", e),
+            Error::Address(e) => write!(f, "Address error: {}", e),
+            Error::ParseFailed(msg) => write!(f, "Parsing error: {}", msg),
+        }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Self {
+        Error::Io(err)
+    }
+}
+
+impl From<key::Error> for Error {
+    fn from(err: key::Error) -> Self {
+        Error::Key(err)
+    }
+}
+
+impl From<transaction::Error> for Error {
+    fn from(err: transaction::Error) -> Self {
+        Error::Transaction(err)
+    }
+}
+
+impl From<ringct::Error> for Error {
+    fn from(err: ringct::Error) -> Self {
+        Error::RingCt(err)
+    }
+}
+
+impl From<address::Error> for Error {
+    fn from(err: address::Error) -> Self {
+        Error::Address(err)
+    }
 }
 
 /// Encode an object into a vector of byte.

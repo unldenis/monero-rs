@@ -26,8 +26,6 @@ use std::fmt::{self, Write};
 use std::ops;
 use std::str::FromStr;
 
-use thiserror::Error;
-
 /// A set of denominations in which amounts can be expressed.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum Denomination {
@@ -84,29 +82,42 @@ impl FromStr for Denomination {
 }
 
 /// An error during amount parsing.
-#[derive(Error, Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParsingError {
     /// Amount is negative.
-    #[error("Amount is negative")]
     Negative,
     /// Amount is too big to fit inside the type.
-    #[error("Amount is too big to fit inside the type")]
     TooBig,
     /// Amount has higher precision than supported by the type.
-    #[error("Amount has higher precision than supported by the type")]
     TooPrecise,
     /// Invalid number format.
-    #[error("Invalid number format")]
     InvalidFormat,
     /// Input string was too large.
-    #[error("Input string was too large")]
     InputTooLarge,
     /// Invalid character in input.
-    #[error("Invalid character in input: {0}")]
     InvalidCharacter(char),
     /// The denomination was unknown.
-    #[error("The denomination was unknown: {0}")]
     UnknownDenomination(String),
+}
+
+impl std::error::Error for ParsingError {}
+
+impl std::fmt::Display for ParsingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParsingError::Negative => write!(f, "Amount is negative"),
+            ParsingError::TooBig => write!(f, "Amount is too big to fit inside the type"),
+            ParsingError::TooPrecise => {
+                write!(f, "Amount has higher precision than supported by the type")
+            }
+            ParsingError::InvalidFormat => write!(f, "Invalid number format"),
+            ParsingError::InputTooLarge => write!(f, "Input string was too large"),
+            ParsingError::InvalidCharacter(c) => write!(f, "Invalid character in input: {}", c),
+            ParsingError::UnknownDenomination(d) => {
+                write!(f, "The denomination was unknown: {}", d)
+            }
+        }
+    }
 }
 
 fn is_too_precise(s: &str, precision: usize) -> bool {

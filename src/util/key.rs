@@ -75,26 +75,42 @@ use crate::consensus::encode::{self, Decodable};
 use crate::cryptonote::hash;
 
 use sealed::sealed;
-use thiserror::Error;
 
 #[cfg(feature = "serde")]
 use serde_crate::{Deserialize, Serialize};
 
 /// Potential errors encountered during key decoding.
-#[derive(Error, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     /// Invalid input length.
-    #[error("Invalid length")]
     InvalidLength,
     /// Not a canonical representation of an curve25519 scalar.
-    #[error("Not a canonical representation of an ed25519 scalar")]
     NotCanonicalScalar,
     /// Invalid point on the curve.
-    #[error("Invalid point on the curve")]
     InvalidPoint,
     /// Hex parsing error.
-    #[error("Hex error: {0}")]
-    Hex(#[from] hex::FromHexError),
+    Hex(hex::FromHexError),
+}
+
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::InvalidLength => write!(f, "Invalid length"),
+            Error::NotCanonicalScalar => {
+                write!(f, "Not a canonical representation of an ed25519 scalar")
+            }
+            Error::InvalidPoint => write!(f, "Invalid point on the curve"),
+            Error::Hex(e) => write!(f, "Hex error: {}", e),
+        }
+    }
+}
+
+impl From<hex::FromHexError> for Error {
+    fn from(err: hex::FromHexError) -> Self {
+        Error::Hex(err)
+    }
 }
 
 /// A private key, a valid curve25519 scalar.

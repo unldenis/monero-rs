@@ -40,16 +40,24 @@ use curve25519_dalek::constants::ED25519_BASEPOINT_POINT;
 use curve25519_dalek::edwards::EdwardsPoint;
 use curve25519_dalek::scalar::Scalar;
 use sealed::sealed;
-use thiserror::Error;
 
 use std::convert::TryInto;
 
 /// Ring Confidential Transaction potential errors.
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Error {
     /// Invalid RingCt type.
-    #[error("Unknown RingCt type")]
     UnknownRctType,
+}
+
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::UnknownRctType => write!(f, "Unknown RingCt type"),
+        }
+    }
 }
 
 // ====================================================================

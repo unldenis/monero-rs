@@ -19,14 +19,22 @@
 //!
 
 use crate::util::address::AddressType;
-use thiserror::Error;
 
 /// Potential errors encountered while manipulating Monero networks.
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Error {
     /// Invalid magic network byte.
-    #[error("Invalid magic network byte")]
     InvalidMagicByte,
+}
+
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::InvalidMagicByte => write!(f, "Invalid magic network byte"),
+        }
+    }
 }
 
 /// The list of the existing Monero networks.

@@ -32,7 +32,6 @@ use curve25519_dalek::edwards::{CompressedEdwardsY, EdwardsPoint};
 use curve25519_dalek::scalar::Scalar;
 use hex::encode as hex_encode;
 use sealed::sealed;
-use thiserror::Error;
 
 use std::ops::Range;
 use std::{fmt, io};
@@ -41,23 +40,32 @@ use std::{fmt, io};
 use serde_crate::{Deserialize, Serialize};
 
 /// Errors possible when manipulating transactions.
-#[derive(Error, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// No transaction public key found in extra.
-    #[error("No transaction public key found")]
     NoTxPublicKey,
     /// Scripts input/output are not supported.
-    #[error("Script not supported")]
     ScriptNotSupported,
     /// Missing ECDH info for the output.
-    #[error("Missing ECDH info for the output")]
     MissingEcdhInfo,
     /// Invalid commitment.
-    #[error("Invalid commitment")]
     InvalidCommitment,
     /// Missing commitment.
-    #[error("Missing commitment")]
     MissingCommitment,
+}
+
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::NoTxPublicKey => write!(f, "No transaction public key found"),
+            Error::ScriptNotSupported => write!(f, "Script not supported"),
+            Error::MissingEcdhInfo => write!(f, "Missing ECDH info for the output"),
+            Error::InvalidCommitment => write!(f, "Invalid commitment"),
+            Error::MissingCommitment => write!(f, "Missing commitment"),
+        }
+    }
 }
 
 /// The key image used in transaction inputs [`TxIn`] to commit to the use of an output one-time
@@ -755,14 +763,35 @@ impl Transaction {
 #[derive(Debug, Error)]
 pub enum SignatureHashError {
     /// [`RctSigBase`] was not set in [`Transaction`]
-    #[error("`RctSigBase` is required for computing the signature hash")]
     MissingRctSigBase,
     /// Either all of [`RctSigPrunable`] was not set within [`Transaction`] or the list of bulletproofs was empty.
-    #[error("Bulletproofs are required for computing the signature hash")]
     NoBulletproofs,
     /// The transaction's [`RctType`] is not supported.
-    #[error("Computing the signature hash for RctType {0} is not supported")]
     UnsupportedRctType(RctType),
+}
+
+#[cfg(feature = "experimental")]
+impl std::error::Error for SignatureHashError {}
+
+#[cfg(feature = "experimental")]
+impl std::fmt::Display for SignatureHashError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SignatureHashError::MissingRctSigBase => write!(
+                f,
+                "`RctSigBase` is required for computing the signature hash"
+            ),
+            SignatureHashError::NoBulletproofs => write!(
+                f,
+                "Bulletproofs are required for computing the signature hash"
+            ),
+            SignatureHashError::UnsupportedRctType(rct_type) => write!(
+                f,
+                "Computing the signature hash for RctType {} is not supported",
+                rct_type
+            ),
+        }
+    }
 }
 
 impl hash::Hashable for Transaction {

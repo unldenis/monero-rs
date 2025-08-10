@@ -51,32 +51,52 @@ use crate::network::{self, Network};
 use crate::util::key::{KeyPair, PublicKey, ViewPair};
 
 use sealed::sealed;
-use thiserror::Error;
 
 /// Potential errors encountered when manipulating addresses.
-#[derive(Error, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     /// Invalid address magic byte.
-    #[error("Invalid magic byte")]
     InvalidMagicByte,
     /// Invalid payment id.
-    #[error("Invalid payment ID")]
     InvalidPaymentId,
     /// Missmatch address checksums.
-    #[error("Invalid checksum")]
     InvalidChecksum,
     /// Generic invalid format.
-    #[error("Invalid format")]
     InvalidFormat,
     /// Monero base58 error.
-    #[error("Base58 error: {0}")]
-    Base58(#[from] base58::Error),
+    Base58(base58::Error),
     /// Network error.
-    #[error("Network error: {0}")]
-    Network(#[from] network::Error),
+    Network(network::Error),
     /// Encode error.
-    #[error("Encode error: {0}")]
     Encoding(&'static str),
+}
+
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::InvalidMagicByte => write!(f, "Invalid magic byte"),
+            Error::InvalidPaymentId => write!(f, "Invalid payment ID"),
+            Error::InvalidChecksum => write!(f, "Invalid checksum"),
+            Error::InvalidFormat => write!(f, "Invalid format"),
+            Error::Base58(e) => write!(f, "Base58 error: {}", e),
+            Error::Network(e) => write!(f, "Network error: {}", e),
+            Error::Encoding(e) => write!(f, "Encode error: {}", e),
+        }
+    }
+}
+
+impl From<base58::Error> for Error {
+    fn from(err: base58::Error) -> Self {
+        Error::Base58(err)
+    }
+}
+
+impl From<network::Error> for Error {
+    fn from(err: network::Error) -> Self {
+        Error::Network(err)
+    }
 }
 
 /// Address type: standard, integrated, or sub-address.

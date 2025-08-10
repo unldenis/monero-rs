@@ -34,27 +34,70 @@ pub mod ringct;
 use super::network;
 use crate::blockdata::transaction;
 
-use thiserror::Error;
-
 /// A general error code, other errors should implement conversions to/from this if appropriate.
-#[derive(Error, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     /// Monero network error.
-    #[error("Network error: {0}")]
-    Network(#[from] network::Error),
+    Network(network::Error),
     /// Monero address error.
-    #[error("Address error: {0}")]
-    Address(#[from] address::Error),
+    Address(address::Error),
     /// Monero key error.
-    #[error("Key error: {0}")]
-    Key(#[from] key::Error),
+    Key(key::Error),
     /// Monero RingCt error.
-    #[error("RingCt error: {0}")]
-    RingCt(#[from] ringct::Error),
+    RingCt(ringct::Error),
     /// Monero transaction error.
-    #[error("Transaction error: {0}")]
-    Transaction(#[from] transaction::Error),
+    Transaction(transaction::Error),
     /// Monero amount parsing error.
-    #[error("Amount parsing error: {0}")]
-    AmountParsing(#[from] amount::ParsingError),
+    AmountParsing(amount::ParsingError),
+}
+
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::Network(e) => write!(f, "Network error: {}", e),
+            Error::Address(e) => write!(f, "Address error: {}", e),
+            Error::Key(e) => write!(f, "Key error: {}", e),
+            Error::RingCt(e) => write!(f, "RingCt error: {}", e),
+            Error::Transaction(e) => write!(f, "Transaction error: {}", e),
+            Error::AmountParsing(e) => write!(f, "Amount parsing error: {}", e),
+        }
+    }
+}
+
+impl From<network::Error> for Error {
+    fn from(err: network::Error) -> Self {
+        Error::Network(err)
+    }
+}
+
+impl From<address::Error> for Error {
+    fn from(err: address::Error) -> Self {
+        Error::Address(err)
+    }
+}
+
+impl From<key::Error> for Error {
+    fn from(err: key::Error) -> Self {
+        Error::Key(err)
+    }
+}
+
+impl From<ringct::Error> for Error {
+    fn from(err: ringct::Error) -> Self {
+        Error::RingCt(err)
+    }
+}
+
+impl From<transaction::Error> for Error {
+    fn from(err: transaction::Error) -> Self {
+        Error::Transaction(err)
+    }
+}
+
+impl From<amount::ParsingError> for Error {
+    fn from(err: amount::ParsingError) -> Self {
+        Error::AmountParsing(err)
+    }
 }
